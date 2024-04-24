@@ -4,11 +4,11 @@ VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HE
 TARGETOS=linux #linux darwin windows
 TARGETARCH=arm64 #amd64 arm64 arm
 
-get:
-	go get
-
 format:
 	gofmt -s -w ./
+
+get:
+	go get
 
 lint:
 	golint
@@ -24,6 +24,13 @@ image:
 
 push:
 	docker push ${REGESTRY}/${APP}:${VERSION}-${TARGETARCH}
+
+dive: image
+	IMG1=$$(docker images -q | head -n 1); \
+	CI=true docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive --ci --lowestEfficiency=0.99 $${IMG1}; \
+	IMG2=$$(docker images -q | sed -n 2p); \
+	docker rmi $${IMG1}; \
+	docker rmi $${IMG2}
 
 clean:
 	rm -rf kbot
